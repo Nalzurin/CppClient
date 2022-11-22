@@ -62,14 +62,14 @@ public:
     }
 
     // Write out to that socket
-    void SendMessageServer(vector<byte> v, int length)
+    void SendMessageServer(vector<byte> v)
     {
 
         sockaddr_in serveraddr;
         serveraddr.sin_family = AF_INET;
         serveraddr.sin_port = htons(port);
         inet_pton(AF_INET, ipaddr.c_str(), &serveraddr.sin_addr);
-        int sendOk = sendto(out, (char*)v.data(), length, 0, (sockaddr*)&serveraddr, sizeof(serveraddr));
+        int sendOk = sendto(out, (char*)v.data(), v.size(), 0, (sockaddr*)&serveraddr, sizeof(serveraddr));
         if (sendOk == SOCKET_ERROR)
         {
             cout << "That didn't work! " << WSAGetLastError() << endl;
@@ -115,7 +115,7 @@ public:
         v.push_back(widthArr[1]);
         v.push_back(heightArr[0]);
         v.push_back(heightArr[1]);
-        SendMessageServer(v, v.size());
+        SendMessageServer(v);
         ListenToServerString();
     }
 
@@ -168,7 +168,7 @@ public:
         vector<byte> v;
         v.resize(0);
         v.push_back(15);
-        SendMessageServer(v, v.size());
+        SendMessageServer(v);
         char* b = ListenToServerBytes();
         memcpy(&width, b, sizeof(width));
         return width;
@@ -178,7 +178,7 @@ public:
         vector<byte> v;
         v.resize(0);
         v.push_back(16);
-        SendMessageServer(v, v.size());
+        SendMessageServer(v);
         char* b = ListenToServerBytes();
         memcpy(&height, b, sizeof(height));
         return height;
@@ -202,14 +202,11 @@ public:
         vector<byte> v;
         v.resize(0);
         v.push_back(1);
-        uint_least16_t r = (color & 0xF800) >> 8;
-        uint_least16_t g = (color & 0x07E0) >> 3;
-        uint_least16_t b = (color & 0x001F) << 3;
-        v.push_back(r);
-        v.push_back(g);
-        v.push_back(b);
+        v.push_back((byte)((color & 0xF800) >> 8));
+        v.push_back((byte)((color & 0x07E0) >> 3));
+        v.push_back((byte)((color & 0x001F) << 3));
 
-        SendMessageServer(v, v.size());
+        SendMessageServer(v);
         ListenToServerString();
     }
 
@@ -221,7 +218,7 @@ public:
         byte rotArr[] = { rot & 0x00FF, rot >> 8};
         v.push_back(rotArr[0]);
         v.push_back(rotArr[1]);
-        SendMessageServer(v, v.size());
+        SendMessageServer(v);
         ListenToServerString();
     }
 
@@ -232,207 +229,160 @@ public:
         vector<byte> v;
         v.resize(0);
         v.push_back(2);
-        v.push_back(x0Arr[0]);
-        v.push_back(x0Arr[1]);
-        v.push_back(y0Arr[0]);
-        v.push_back(y0Arr[1]);
-        uint_least16_t r = (color & 0xF800) >> 8;
-        uint_least16_t g = (color & 0x07E0) >> 3;
-        uint_least16_t b = (color & 0x001F) << 3;
-        v.push_back(r);
-        v.push_back(g);
-        v.push_back(b);
-        SendMessageServer(v, v.size());
+        v.push_back((byte)(x0 & 0x00FF));
+        v.push_back((byte)(x0 >> 8));
+        v.push_back((byte)(y0 & 0x00FF));
+        v.push_back((byte)(y0 >> 8));
+        v.push_back((byte)((color & 0xF800) >> 8));
+        v.push_back((byte)((color & 0x07E0) >> 3));
+        v.push_back((byte)((color & 0x001F) << 3));
+        SendMessageServer(v);
         ListenToServerString();
     }
     void drawLine(int_least16_t x0, int_least16_t y0, int_least16_t x1, int_least16_t y1, uint_least16_t color) override
     {
-        uint_least16_t r = (color & 0xF800) >> 8;
-        uint_least16_t g = (color & 0x07E0) >> 3;
-        uint_least16_t b = (color & 0x001F) << 3;
-        byte x0Arr[] = { x0 & 0x00FF, x0 >> 8 };
-        byte y0Arr[] = { y0 & 0x00FF, y0 >> 8 };
-        byte x1Arr[] = { x1 & 0x00FF, x1 >> 8 };
-        byte y1Arr[] = { y1 & 0x00FF, y1 >> 8 };
         vector<byte> v;
         v.resize(0);
         v.push_back(3);
-        v.push_back(x0Arr[0]);
-        v.push_back(x0Arr[1]);
-        v.push_back(y0Arr[0]);
-        v.push_back(y0Arr[1]);
-        v.push_back(x1Arr[0]);
-        v.push_back(x1Arr[1]);
-        v.push_back(y1Arr[0]);
-        v.push_back(y1Arr[1]);
-        v.push_back(r);
-        v.push_back(g);
-        v.push_back(b);
-        SendMessageServer(v, v.size());
+        v.push_back((byte)(x0 & 0x00FF));
+        v.push_back((byte)(x0 >> 8));
+        v.push_back((byte)(y0 & 0x00FF));
+        v.push_back((byte)(y0 >> 8));
+        v.push_back((byte)(x1 & 0x00FF));
+        v.push_back((byte)(x1 >> 8));
+        v.push_back((byte)(y1 & 0x00FF));
+        v.push_back((byte)(y1 >> 8));
+        v.push_back((byte)((color & 0xF800) >> 8));
+        v.push_back((byte)((color & 0x07E0) >> 3));
+        v.push_back((byte)((color & 0x001F) << 3));
+        SendMessageServer(v);
         ListenToServerString();
     }
     void drawRect(int_least16_t x0, int_least16_t y0, int_least16_t w, int_least16_t h, uint_least16_t color) override
     {
-        uint_least16_t r = (color & 0xF800) >> 8;
-        uint_least16_t g = (color & 0x07E0) >> 3;
-        uint_least16_t b = (color & 0x001F) << 3;
-        byte x0Arr[] = { x0 & 0x00FF, x0 >> 8 };
-        byte y0Arr[] = { y0 & 0x00FF, y0 >> 8 };
-        byte wArr[] = { w & 0x00FF, w >> 8 };
-        byte hArr[] = { h & 0x00FF, h >> 8 };
         vector<byte> v;
         v.resize(0);
         v.push_back(4);
-        v.push_back(x0Arr[0]);
-        v.push_back(x0Arr[1]);
-        v.push_back(y0Arr[0]);
-        v.push_back(y0Arr[1]);
-        v.push_back(wArr[0]);
-        v.push_back(wArr[1]);
-        v.push_back(hArr[0]);
-        v.push_back(hArr[1]);
-        v.push_back(r);
-        v.push_back(g);
-        v.push_back(b);
-        SendMessageServer(v, v.size());
+        v.push_back((byte)(x0 & 0x00FF));
+        v.push_back((byte)(x0 >> 8));
+        v.push_back((byte)(y0 & 0x00FF));
+        v.push_back((byte)(y0 >> 8));
+        v.push_back((byte)(w & 0x00FF));
+        v.push_back((byte)(w >> 8));
+        v.push_back((byte)(h & 0x00FF));
+        v.push_back((byte)(h >> 8));
+        v.push_back((byte)((color & 0xF800) >> 8));
+        v.push_back((byte)((color & 0x07E0) >> 3));
+        v.push_back((byte)((color & 0x001F) << 3));
+        SendMessageServer(v);
         ListenToServerString();
     }
     void fillRect(int_least16_t x0, int_least16_t y0, int_least16_t w, int_least16_t h, uint_least16_t color) override
     {
-        uint_least16_t r = (color & 0xF800) >> 8;
-        uint_least16_t g = (color & 0x07E0) >> 3;
-        uint_least16_t b = (color & 0x001F) << 3;
-        byte x0Arr[] = { x0 & 0x00FF, x0 >> 8 };
-        byte y0Arr[] = { y0 & 0x00FF, y0 >> 8 };
-        byte wArr[] = { w & 0x00FF, w >> 8 };
-        byte hArr[] = { h & 0x00FF, h >> 8 };
         vector<byte> v;
         v.resize(0);
         v.push_back(5);
-        v.push_back(x0Arr[0]);
-        v.push_back(x0Arr[1]);
-        v.push_back(y0Arr[0]);
-        v.push_back(y0Arr[1]);
-        v.push_back(wArr[0]);
-        v.push_back(wArr[1]);
-        v.push_back(hArr[0]);
-        v.push_back(hArr[1]);
-        v.push_back(r);
-        v.push_back(g);
-        v.push_back(b);
-        SendMessageServer(v, v.size());
+        v.push_back((byte)(x0 & 0x00FF));
+        v.push_back((byte)(x0 >> 8));
+        v.push_back((byte)(y0 & 0x00FF));
+        v.push_back((byte)(y0 >> 8));
+        v.push_back((byte)(w & 0x00FF));
+        v.push_back((byte)(w >> 8));
+        v.push_back((byte)(h & 0x00FF));
+        v.push_back((byte)(h >> 8));
+        v.push_back((byte)((color & 0xF800) >> 8));
+        v.push_back((byte)((color & 0x07E0) >> 3));
+        v.push_back((byte)((color & 0x001F) << 3));
+        SendMessageServer(v);
         ListenToServerString();
     }
     void drawEllipse(int_least16_t x0, int_least16_t y0, int_least16_t r_x, int_least16_t r_y, uint_least16_t color) override
     {
-        uint_least16_t r = (color & 0xF800) >> 8;
-        uint_least16_t g = (color & 0x07E0) >> 3;
-        uint_least16_t b = (color & 0x001F) << 3;
-        byte x0Arr[] = { x0 & 0x00FF, x0 >> 8 };
-        byte y0Arr[] = { y0 & 0x00FF, y0 >> 8 };
-        byte r_xArr[] = { r_x & 0x00FF, r_x >> 8 };
-        byte r_yArr[] = { r_y & 0x00FF, r_y >> 8 };
+
         vector<byte> v;
         v.resize(0);
         v.push_back(6);
-        v.push_back(x0Arr[0]);
-        v.push_back(x0Arr[1]);
-        v.push_back(y0Arr[0]);
-        v.push_back(y0Arr[1]);
-        v.push_back(r_xArr[0]);
-        v.push_back(r_xArr[1]);
-        v.push_back(r_yArr[0]);
-        v.push_back(r_yArr[1]);
-        v.push_back(r);
-        v.push_back(g);
-        v.push_back(b);
-        SendMessageServer(v, v.size());
+        v.push_back((byte)(x0 & 0x00FF));
+        v.push_back((byte)(x0 >> 8));
+        v.push_back((byte)(y0 & 0x00FF));
+        v.push_back((byte)(y0 >> 8));
+        v.push_back((byte)(r_x & 0x00FF));
+        v.push_back((byte)(r_x >> 8));
+        v.push_back((byte)(r_y & 0x00FF));
+        v.push_back((byte)(r_y >> 8));
+        v.push_back((byte)((color & 0xF800) >> 8));
+        v.push_back((byte)((color & 0x07E0) >> 3));
+        v.push_back((byte)((color & 0x001F) << 3));
+        SendMessageServer(v);
         ListenToServerString();
     }
     void fillEllipse(int_least16_t x0, int_least16_t y0, int_least16_t r_x, int_least16_t r_y, uint_least16_t color) override
     {
-        uint_least16_t r = (color & 0xF800) >> 8;
-        uint_least16_t g = (color & 0x07E0) >> 3;
-        uint_least16_t b = (color & 0x001F) << 3;
-        byte x0Arr[] = { x0 & 0x00FF, x0 >> 8 };
-        byte y0Arr[] = { y0 & 0x00FF, y0 >> 8 };
-        byte r_xArr[] = { r_x & 0x00FF, r_x >> 8 };
-        byte r_yArr[] = { r_y & 0x00FF, r_y >> 8 };
         vector<byte> v;
         v.resize(0);
         v.push_back(7);
-        v.push_back(x0Arr[0]);
-        v.push_back(x0Arr[1]);
-        v.push_back(y0Arr[0]);
-        v.push_back(y0Arr[1]);
-        v.push_back(r_xArr[0]);
-        v.push_back(r_xArr[1]);
-        v.push_back(r_yArr[0]);
-        v.push_back(r_yArr[1]);
-        v.push_back(r);
-        v.push_back(g);
-        v.push_back(b);
-        SendMessageServer(v, v.size());
+        v.push_back((byte)(x0 & 0x00FF));
+        v.push_back((byte)(x0 >> 8));
+        v.push_back((byte)(y0 & 0x00FF));
+        v.push_back((byte)(y0 >> 8));
+        v.push_back((byte)(r_x & 0x00FF));
+        v.push_back((byte)(r_x >> 8));
+        v.push_back((byte)(r_y & 0x00FF));
+        v.push_back((byte)(r_y >> 8));
+        v.push_back((byte)((color & 0xF800) >> 8));
+        v.push_back((byte)((color & 0x07E0) >> 3));
+        v.push_back((byte)((color & 0x001F) << 3));
+        SendMessageServer(v);
         ListenToServerString();
     }
     int_least16_t drawChar(int_least16_t x, int_least16_t y, char c, uint_least16_t color, uint_least16_t bg, uint_least8_t size) override
     {
-        return x;
+        return drawText(x,y,&c,color,bg,size);
     }
     int_least16_t drawChar(int_least16_t x, int_least16_t y, unsigned char c, uint_least16_t color, uint_least16_t bg, uint_least8_t size) override
     {
-        return x;
+        return drawText(x,y,(const char*)c,color,bg,size);
     }
     int_least16_t drawText(int_least16_t x, int_least16_t y, const char* s, uint_least16_t color, uint_least16_t bg, uint_least8_t size) override
     {
-        uint_least16_t r = (color & 0xF800) >> 8;
-        uint_least16_t g = (color & 0x07E0) >> 3;
-        uint_least16_t b = (color & 0x001F) << 3;
-        byte x0Arr[] = { x & 0x00FF, x >> 8 };
-        byte y0Arr[] = { y & 0x00FF, y >> 8 };
-        byte length[] = { bg & 0x00FF, bg >> 8 };
-        byte font[] = { size & 0x00FF, size >> 8 };
-        byte command;
         vector<byte> v;
         v.resize(0);
         v.push_back(19);
-        v.push_back(x0Arr[0]);
-        v.push_back(x0Arr[1]);
-        v.push_back(y0Arr[0]);
-        v.push_back(y0Arr[1]);
-        v.push_back(r);
-        v.push_back(g);
-        v.push_back(b);
-        v.push_back(font[0]);
-        v.push_back(font[1]);
-        v.push_back(length[0]);
-        v.push_back(length[1]);
+        v.push_back((byte)(x & 0x00FF));
+        v.push_back((byte)(x >> 8));
+        v.push_back((byte)(y & 0x00FF));
+        v.push_back((byte)(y >> 8));
+        v.push_back((byte)((color & 0xF800) >> 8));
+        v.push_back((byte)((color & 0x07E0) >> 3));
+        v.push_back((byte)((color & 0x001F) << 3));
+        v.push_back((byte)(size & 0x00FF));
+        v.push_back((byte)(size >> 8));
+        v.push_back((byte)(bg & 0x00FF));
+        v.push_back((byte)(bg >> 8));
         for (int i = 0; i < bg; i++)
         {
             v.push_back(s[i]);
         }
-        SendMessageServer(v, v.size());
+        SendMessageServer(v);
         ListenToServerString();
         return x;
     }
     void loadSprite(uint_least8_t index, int_least16_t width, int_least16_t height, char* data) override
     {
         int k = 0;
-        byte widthArr[] = { width & 0x00FF, width >> 8 };
-        byte heightArr[] = { height & 0x00FF, height >> 8 };
         vector<byte> v;
         v.resize(0);
         v.push_back(17);
         v.push_back(index);
-        v.push_back(widthArr[0]);
-        v.push_back(widthArr[1]);
-        v.push_back(heightArr[0]);
-        v.push_back(heightArr[1]);
+        v.push_back((byte)(width & 0x00FF));
+        v.push_back((byte)(width >> 8));
+        v.push_back((byte)(height & 0x00FF));
+        v.push_back((byte)(height >> 8));
         for (int i = 0; i < width * height * 3; i++)
         {
             v.push_back(data[i]);
         }
-        SendMessageServer(v, v.size());
+        SendMessageServer(v);
         ListenToServerString();
     }
     void showSprite(uint_least8_t index, uint_least16_t x, uint_least16_t y) override
@@ -440,16 +390,13 @@ public:
         vector<byte> v;
         v.resize(0);
         v.push_back(18);
-        byte indexArr[] = { index & 0x00FF, index >> 8 };
-        byte xArr[] = { x & 0x00FF, x >> 8 };
-        byte yArr[] = { y & 0x00FF, y >> 8 };
-        v.push_back(indexArr[0]);
-        v.push_back(indexArr[1]);
-        v.push_back(xArr[0]);
-        v.push_back(xArr[1]);
-        v.push_back(yArr[0]);
-        v.push_back(yArr[1]);
-        SendMessageServer(v, v.size());
+        v.push_back((byte)(index & 0x00FF));
+        v.push_back((byte)(index >> 8));
+        v.push_back((byte)(x & 0x00FF));
+        v.push_back((byte)(x >> 8));
+        v.push_back((byte)(y & 0x00FF));
+        v.push_back((byte)(y >> 8));
+        SendMessageServer(v);
         ListenToServerString();
     }
     void UploadGIF(int startIndex, int Frames, string name, string extension)
@@ -484,7 +431,7 @@ public:
                 Sleep(100);
             }
         }
-        
+        fillScreen(R_G_B(255, 255, 255));
         
     }
     void DanceFloor(int iterations, uint_least16_t x, uint_least16_t y)
@@ -493,16 +440,25 @@ public:
         for (int i = 0; i < iterations; i++)
         {
             fillScreen(R_G_B(255, 255, 255));
+            Sleep(10);
             fillRect(x, y, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
+            Sleep(10);
             fillRect(x + 100, y, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
+            Sleep(10);
             fillRect(x + 200, y, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
+            Sleep(10);
             fillRect(x, y + 100, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
+            Sleep(10);
             fillRect(x + 100, y + 100, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
+            Sleep(10);
             fillRect(x + 200, y + 100, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
+            Sleep(10);
             fillRect(x, y + 200, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
+            Sleep(10);
             fillRect(x + 100, y + 200, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
+            Sleep(10);
             fillRect(x + 200, y + 200, 100, 100, R_G_B(rand() % 256, rand() % 256, rand() % 256));
-            Sleep(2000);
+            Sleep(500);
 
 
         }

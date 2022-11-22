@@ -6,7 +6,7 @@
 #include <cstring>
 #include <WS2tcpip.h>
 #include "GraphicsLib.cpp"
-
+#include <limits>
 #define LINEMAX = 1024;
 using namespace std;
 
@@ -64,7 +64,17 @@ int main()
 	while (true)
 	{
 		cout << "Input Command, for available commands enter 100, to exit enter 0; \n";
+
 		cin >> command;
+		while (cin.fail())
+		{
+			cin.clear();
+			cin.ignore();
+			cout << "Input failed, incorrect command" << endl;
+			cout << "Input Command, for available commands enter 100, to exit enter 0; \n";
+			cin >> command;
+		}
+
 
 		switch (command)
 		{
@@ -191,8 +201,8 @@ int main()
 			lib.SetRotation(x1);
 			break;
 		case 13:
-			 cout << "Width = " << lib.getWidth() << "px" << endl;
-			 break;
+			cout << "Width = " << lib.getWidth() << "px" << endl;
+			break;
 		case 14:
 			cout << "Height = " << lib.getHeight() << "px" << endl;
 			break;
@@ -218,10 +228,10 @@ int main()
 			cin >> y2;
 			cout << "Input number of iterations\n";
 			cin >> val2;
-			lib.PlayGIF(val2, x2, y2 , x1, y1);
+			lib.PlayGIF(val2, x2, y2, x1, y1);
 			break;
 
-			
+
 		case 0:
 			return 0;
 			break;
